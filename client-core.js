@@ -13,7 +13,7 @@ async function execute() {
     const parsedArgs = parseArgs(process.argv);
     const query = createFromToQuery(parsedArgs);
     let resultString = '';
-    switch (parsedArgs.command.toLowerCase()) {
+    switch (parsedArgs.command) {
         case 'send':
             resultString = dyeResponse(await sendHelper(parsedArgs, query), parsedArgs.detailed);
 
@@ -139,13 +139,13 @@ function createFromToQuery(obj) {
 
 function parseArgs(args) {
     let resultParams = {
-        command: args[2]
+        command: args[2].toLowerCase()
     };
     let params = args.slice(3);
     for (let i = 0; i < params.length; i++) {
         let paramName = '';
         let paramValue = '';
-        if (/-v/.test(params[i])) {
+        if (params[i] === '-v') {
             resultParams.detailed = true;
             continue;
         } else if (/--.+=.+/.test(params[i])) {

@@ -98,6 +98,9 @@ function deleteHelper(id) {
 
 function patchHelper(id, text) {
     let patchedMessage = chat.find((message) => (message.id === id));
+    if (!patchedMessage) {
+        return JSON.stringify({});
+    }
     patchedMessage.text = text;
     patchedMessage.edited = true;
 

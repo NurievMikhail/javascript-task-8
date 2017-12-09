@@ -5,7 +5,7 @@ const querystring = require('querystring');
 const chalk = require('chalk');
 
 module.exports.execute = execute;
-module.exports.isStar = true;
+module.exports.isStar = false;
 
 const URL = 'http://localhost:8080/messages';
 

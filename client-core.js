@@ -145,7 +145,7 @@ function parseArgs(args) {
     for (let i = 0; i < params.length; i++) {
         let paramName = '';
         let paramValue = '';
-        if (params[i] === '-v') {
+        if (/-v/.test(params[i])) {
             resultParams.detailed = true;
             continue;
         } else if (/--.+=.+/.test(params[i])) {
@@ -156,7 +156,7 @@ function parseArgs(args) {
             paramValue = params[i + 1];
             i++;
         }
-        resultParams[paramName] = paramValue;
+        resultParams[paramName.toLowerCase()] = paramValue;
     }
 
     return resultParams;

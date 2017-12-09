@@ -32,10 +32,12 @@ server.on('request', function (req, res) {
                 break;
             case 'DELETE':
                 id = parsedUrl.href.split('/')[2];
+                checkId(id, res);
                 res.end(deleteHelper(id));
                 break;
             case 'PATCH':
                 id = parsedUrl.href.split('/')[2];
+                checkId(id, res);
                 req.on('readable', function () {
                     let partOfMessage = req.read();
                     if (partOfMessage !== null) {
@@ -98,6 +100,13 @@ function patchHelper(id, text) {
     patchedMessage.edited = true;
 
     return JSON.stringify(patchedMessage);
+}
+
+function checkId(id, res) {
+    if (!id) {
+        res.statusCode = 404;
+        res.end();
+    }
 }
 
 module.exports = server;

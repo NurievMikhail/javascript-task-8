@@ -26,18 +26,19 @@ server.on('request', function (req, res) {
                 });
                 req.on('end', function () {
                     messageText = JSON.parse(messageText);
+                    checkValue(messageText.text, res);
                     res.end(postHelper(
                         parsedUrl.query.from, parsedUrl.query.to, messageText.text));
                 });
                 break;
             case 'DELETE':
                 id = parsedUrl.href.split('/')[2];
-                checkId(id, res);
+                checkValue(id, res);
                 res.end(deleteHelper(id));
                 break;
             case 'PATCH':
                 id = parsedUrl.href.split('/')[2];
-                checkId(id, res);
+                checkValue(id, res);
                 req.on('readable', function () {
                     let partOfMessage = req.read();
                     if (partOfMessage !== null) {
@@ -46,6 +47,7 @@ server.on('request', function (req, res) {
                 });
                 req.on('end', function () {
                     messageText = JSON.parse(messageText);
+                    checkValue(messageText.text, res);
                     res.end(patchHelper(id, messageText.text));
                 });
                 break;
@@ -102,8 +104,8 @@ function patchHelper(id, text) {
     return JSON.stringify(patchedMessage);
 }
 
-function checkId(id, res) {
-    if (!id) {
+function checkValue(value, res) {
+    if (!value) {
         res.statusCode = 404;
         res.end();
     }

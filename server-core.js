@@ -9,7 +9,7 @@ let chat = [];
 
 server.on('request', function (req, res) {
     let parsedUrl = url.parse(req.url, true);
-    if (/\/messages/.test(parsedUrl.pathname)) {
+    if (checkPath(req, parsedUrl)) {
         res.setHeader('Content-Type', 'application/json');
         let messageText = '';
         let id = '';
@@ -108,6 +108,24 @@ function checkValue(value, res) {
     if (!value) {
         res.statusCode = 404;
         res.end();
+    }
+}
+
+function checkPath(req, parsedUrl) {
+    switch (req.method) {
+        case 'GET':
+        case 'POST':
+            if (/^\/messages$/.test(parsedUrl.pathname)) {
+                return true;
+            }
+
+            return false;
+        default:
+            if (/^\/messages\/\w+$/.test(parsedUrl.pathname)) {
+                return true;
+            }
+
+            return false;
     }
 }
 

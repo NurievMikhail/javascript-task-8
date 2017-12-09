@@ -145,7 +145,7 @@ function parseArgs(args) {
     for (let i = 0; i < params.length; i++) {
         let paramName = '';
         let paramValue = '';
-        if (/-v/.test(params[i])) {
+        if (/^-v$/.test(params[i])) {
             resultParams.detailed = true;
             continue;
         } else if (/--.+=.+/.test(params[i])) {

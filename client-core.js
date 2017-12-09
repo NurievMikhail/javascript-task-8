@@ -112,7 +112,7 @@ function deleteHelper(args) {
 
 function editHelper(args) {
     if (!args.text || !args.id) {
-        return;
+        return Promise.resolve(JSON.stringify({}));
     }
     let resultUrl = `${URL}/${args.id}`;
     const options = {

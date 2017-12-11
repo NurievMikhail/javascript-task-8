@@ -3,26 +3,24 @@
 const request = require('request');
 const querystring = require('querystring');
 const chalk = require('chalk');
-const parseArgs = require('minimist');
 
 module.exports.execute = execute;
-module.exports.isStar = true;
+module.exports.isStar = false;
 
 const URL = 'http://localhost:8080/messages';
 
 async function execute() {
-    const parsedArgs = parseArgs(process.argv.slice(2));
-    parsedArgs.command = parsedArgs._[0];
+    const parsedArgs = parseArgs(process.argv);
     const query = createFromToQuery(parsedArgs);
     let resultString = '';
     switch (parsedArgs.command) {
         case 'send':
-            resultString = dyeResponse(await sendHelper(parsedArgs, query), parsedArgs.v);
+            resultString = dyeResponse(await sendHelper(parsedArgs, query), parsedArgs.detailed);
 
             return Promise.resolve(resultString);
         case 'list':
             resultString = (await listHelper(query))
-                .map((message) => (dyeResponse(message, parsedArgs.v)))
+                .map((message) => (dyeResponse(message, parsedArgs.detailed)))
                 .join('\n\n');
 
             return Promise.resolve(resultString);
@@ -31,7 +29,7 @@ async function execute() {
 
             return Promise.resolve(resultString);
         case 'edit':
-            resultString = dyeResponse(await editHelper(parsedArgs), parsedArgs.v);
+            resultString = dyeResponse(await editHelper(parsedArgs), parsedArgs.detailed);
 
             return Promise.resolve(resultString);
         default:
@@ -39,9 +37,9 @@ async function execute() {
     }
 }
 
-function dyeResponse(response, v) {
+function dyeResponse(response, detailed) {
     let resultResponse = '';
-    if (v) {
+    if (detailed) {
         let id = chalk.hex('#FF0')('ID');
         resultResponse += `${id}: ${response.id}\n`;
     }
@@ -106,7 +104,11 @@ function deleteHelper(args) {
     };
 
     return new Promise((resolve) => {
-        request(options, function () {
+        request(options, function (err) {
+            if (err) {
+                return resolve(err);
+            }
+
             return resolve('DELETED');
         });
     });
@@ -137,6 +139,31 @@ function createFromToQuery(obj) {
     }
 
     return querystring.stringify(fromToQuery);
+}
+
+function parseArgs(args) {
+    let resultParams = {
+        command: args[2].toLowerCase()
+    };
+    let params = args.slice(3);
+    for (let i = 0; i < params.length; i++) {
+        let paramName = '';
+        let paramValue = '';
+        if (params[i] === '-v') {
+            resultParams.detailed = true;
+            continue;
+        } else if (/--.+=.+/.test(params[i])) {
+            paramName = params[i].split('=')[0].slice(2);
+            paramValue = params[i].split('=')[1];
+        } else {
+            paramName = params[i].slice(2);
+            paramValue = params[i + 1];
+            i++;
+        }
+        resultParams[paramName.toLowerCase()] = paramValue;
+    }
+
+    return resultParams;
 }
 
 

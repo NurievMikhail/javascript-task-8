@@ -3,6 +3,7 @@
 const request = require('request');
 const querystring = require('querystring');
 const chalk = require('chalk');
+const parseArgs = require('minimist');
 
 module.exports.execute = execute;
 module.exports.isStar = true;
@@ -10,17 +11,18 @@ module.exports.isStar = true;
 const URL = 'http://localhost:8080/messages';
 
 async function execute() {
-    const parsedArgs = parseArgs(process.argv);
+    const parsedArgs = parseArgs(process.argv.slice(2));
+    parsedArgs.command = parsedArgs._[0];
     const query = createFromToQuery(parsedArgs);
     let resultString = '';
     switch (parsedArgs.command) {
         case 'send':
-            resultString = dyeResponse(await sendHelper(parsedArgs, query), parsedArgs.detailed);
+            resultString = dyeResponse(await sendHelper(parsedArgs, query), parsedArgs.v);
 
             return Promise.resolve(resultString);
         case 'list':
             resultString = (await listHelper(query))
-                .map((message) => (dyeResponse(message, parsedArgs.detailed)))
+                .map((message) => (dyeResponse(message, parsedArgs.v)))
                 .join('\n\n');
 
             return Promise.resolve(resultString);
@@ -29,7 +31,7 @@ async function execute() {
 
             return Promise.resolve(resultString);
         case 'edit':
-            resultString = dyeResponse(await editHelper(parsedArgs), parsedArgs.detailed);
+            resultString = dyeResponse(await editHelper(parsedArgs), parsedArgs.v);
 
             return Promise.resolve(resultString);
         default:
@@ -37,9 +39,9 @@ async function execute() {
     }
 }
 
-function dyeResponse(response, detailed) {
+function dyeResponse(response, v) {
     let resultResponse = '';
-    if (detailed) {
+    if (v) {
         let id = chalk.hex('#FF0')('ID');
         resultResponse += `${id}: ${response.id}\n`;
     }
@@ -135,31 +137,6 @@ function createFromToQuery(obj) {
     }
 
     return querystring.stringify(fromToQuery);
-}
-
-function parseArgs(args) {
-    let resultParams = {
-        command: args[2].toLowerCase()
-    };
-    let params = args.slice(3);
-    for (let i = 0; i < params.length; i++) {
-        let paramName = '';
-        let paramValue = '';
-        if (params[i] === '-v') {
-            resultParams.detailed = true;
-            continue;
-        } else if (/--.+=.+/.test(params[i])) {
-            paramName = params[i].split('=')[0].slice(2);
-            paramValue = params[i].split('=')[1];
-        } else {
-            paramName = params[i].slice(2);
-            paramValue = params[i + 1];
-            i++;
-        }
-        resultParams[paramName.toLowerCase()] = paramValue;
-    }
-
-    return resultParams;
 }
 
 

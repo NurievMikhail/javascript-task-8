@@ -124,7 +124,7 @@ function checkPath(req, parsedUrl) {
 
             return false;
         default:
-            if (/^\/messages\/\w+$/.test(parsedUrl.pathname)) {
+            if (/^\/messages\/[\w-_]+$/.test(parsedUrl.pathname)) {
                 return true;
             }
 

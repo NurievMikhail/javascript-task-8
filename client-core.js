@@ -103,10 +103,10 @@ function deleteHelper(args) {
         json: true
     };
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         request(options, function (err) {
             if (err) {
-                return reject(err);
+                return resolve(err);
             }
 
             return resolve('DELETED');
@@ -168,10 +168,10 @@ function parseArgs(args) {
 
 
 function createRequestPromise(options) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         request(options, function (err, res, body) {
             if (err) {
-                return reject(err);
+                return resolve(err);
             }
 
             return resolve(body);

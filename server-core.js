@@ -80,10 +80,14 @@ function getHelper(from, to) {
 function postHelper(from, to, text) {
     let newMessage = {
         id: shortid.generate(),
-        from: from || undefined,
-        to: to || undefined,
         text: text
     };
+    if (from) {
+        newMessage.from = from;
+    }
+    if (to) {
+        newMessage.to = to;
+    }
     chat.push(newMessage);
 
     return JSON.stringify(newMessage);

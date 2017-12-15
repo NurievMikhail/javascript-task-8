@@ -11,18 +11,45 @@ server.on('request', function (req, res) {
     let parsedUrl = url.parse(req.url, true);
     if (checkPath(req, parsedUrl)) {
         res.setHeader('Content-Type', 'application/json');
+        let messageText = '';
+        let id = '';
         switch (req.method) {
             case 'GET':
-                getHelper(req, res);
+                res.end(getHelper(parsedUrl.query.from, parsedUrl.query.to));
                 break;
             case 'POST':
-                postHelper(req, res);
+                req.on('readable', function () {
+                    let partOfMessage = req.read();
+                    if (partOfMessage !== null) {
+                        messageText += partOfMessage;
+                    }
+                });
+                req.on('end', function () {
+                    messageText = JSON.parse(messageText);
+                    checkValue(messageText.text, res);
+                    res.end(postHelper(
+                        parsedUrl.query.from, parsedUrl.query.to, messageText.text));
+                });
                 break;
             case 'DELETE':
-                deleteHelper(req, res);
+                id = parsedUrl.href.split('/')[2];
+                checkValue(id, res);
+                res.end(deleteHelper(id));
                 break;
             case 'PATCH':
-                patchHelper(req, res);
+                id = parsedUrl.href.split('/')[2];
+                checkValue(id, res);
+                req.on('readable', function () {
+                    let partOfMessage = req.read();
+                    if (partOfMessage !== null) {
+                        messageText += partOfMessage;
+                    }
+                });
+                req.on('end', function () {
+                    messageText = JSON.parse(messageText);
+                    checkValue(messageText.text, res);
+                    res.end(patchHelper(id, messageText.text));
+                });
                 break;
             default:
                 res.statusCode = 404;
@@ -35,94 +62,53 @@ server.on('request', function (req, res) {
     }
 });
 
-function getHelper(req, res) {
-    const parsedUrl = url.parse(req.url, true);
-    const from = parsedUrl.query.from;
-    const to = parsedUrl.query.to;
+function getHelper(from, to) {
     if (from === undefined && to === undefined) {
-        return res.end(JSON.stringify(chat));
+        return JSON.stringify(chat);
     }
     if (to === undefined) {
-        return res.end(JSON.stringify(chat.filter((chatMessage) => (chatMessage.from === from))));
+        return JSON.stringify(chat.filter((chatMessage) => (chatMessage.from === from)));
     }
     if (from === undefined) {
-        return res.end(JSON.stringify(chat.filter((chatMessage) => (chatMessage.to === to))));
+        return JSON.stringify(chat.filter((chatMessage) => (chatMessage.to === to)));
     }
 
-    return res.end(JSON.stringify(chat.filter((chatMessage) =>
-        (chatMessage.to === to && chatMessage.from === from))));
+    return JSON.stringify(chat.filter((chatMessage) =>
+        (chatMessage.to === to && chatMessage.from === from)));
 }
 
-function postHelper(req, res) {
-    const parsedUrl = url.parse(req.url, true);
-    let messageText = '';
-    const from = parsedUrl.query.from;
-    const to = parsedUrl.query.to;
-    req.on('readable', function () {
-        let partOfMessage = req.read();
-        if (partOfMessage !== null) {
-            messageText += partOfMessage;
-        }
-    });
-    req.on('end', function () {
-        messageText = JSON.parse(messageText);
-        checkValue(messageText.text, res);
-        let newMessage = {
-            id: shortid.generate(),
-            text: messageText.text
-        };
-        if (from) {
-            newMessage.from = from;
-        }
-        if (to) {
-            newMessage.to = to;
-        }
-        chat.push(newMessage);
+function postHelper(from, to, text) {
+    let newMessage = {
+        id: shortid.generate(),
+        text: text
+    };
+    if (from) {
+        newMessage.from = from;
+    }
+    if (to) {
+        newMessage.to = to;
+    }
+    chat.push(newMessage);
 
-        return res.end(JSON.stringify(newMessage));
-    });
+    return JSON.stringify(newMessage);
 }
 
-function deleteHelper(req, res) {
-    const parsedUrl = url.parse(req.url, true);
-    const id = parsedUrl.href.split('/')[2];
-    checkValue(id, res);
+function deleteHelper(id) {
     let indexOfMessage = chat.indexOf(chat.find((message) => (message.id === id)));
-    if (indexOfMessage !== -1) {
-        chat.splice(indexOfMessage, 1);
+    chat.splice(indexOfMessage, 1);
 
-        return res.end(JSON.stringify({ 'status': 'ok' }));
-    }
-    res.statusCode = 404;
-
-    return res.end();
+    return JSON.stringify({ 'status': 'ok' });
 }
 
-function patchHelper(req, res) {
-    const parsedUrl = url.parse(req.url, true);
-    const id = parsedUrl.href.split('/')[2];
-    checkValue(id, res);
-    let messageText = '';
-    req.on('readable', function () {
-        let partOfMessage = req.read();
-        if (partOfMessage !== null) {
-            messageText += partOfMessage;
-        }
-    });
-    req.on('end', function () {
-        messageText = JSON.parse(messageText);
-        checkValue(messageText.text, res);
-    });
+function patchHelper(id, text) {
     let patchedMessage = chat.find((message) => (message.id === id));
-    if (patchedMessage) {
-        patchedMessage.text = messageText.text;
-        patchedMessage.edited = true;
-
-        return res.end(JSON.stringify(patchedMessage));
+    if (!patchedMessage) {
+        return JSON.stringify({});
     }
+    patchedMessage.text = text;
+    patchedMessage.edited = true;
 
-    res.statusCode = 404;
-    res.end();
+    return JSON.stringify(patchedMessage);
 }
 
 function checkValue(value, res) {

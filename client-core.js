@@ -11,7 +11,7 @@ const URL = 'http://localhost:8080/messages';
 
 async function execute() {
     const parsedArgs = parseArgs(process.argv);
-    const query = createFromToQuery(parsedArgs);
+    const query = createFromToQuery(parsedArgs.from, parsedArgs.to);
     let resultString = '';
     switch (parsedArgs.command) {
         case 'send':
@@ -129,13 +129,13 @@ function editHelper(args) {
     return createRequestPromise(options);
 }
 
-function createFromToQuery(obj) {
+function createFromToQuery(from, to) {
     let fromToQuery = {};
-    if (obj.from) {
-        fromToQuery.from = obj.from;
+    if (from) {
+        fromToQuery.from = from;
     }
-    if (obj.to) {
-        fromToQuery.to = obj.to;
+    if (to) {
+        fromToQuery.to = to;
     }
 
     return querystring.stringify(fromToQuery);

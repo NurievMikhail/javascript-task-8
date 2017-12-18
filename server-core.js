@@ -80,21 +80,17 @@ function getHelper(from, to) {
 function postHelper(from, to, text) {
     let newMessage = {
         id: shortid.generate(),
-        text: text
+        text,
+        from,
+        to
     };
-    if (from) {
-        newMessage.from = from;
-    }
-    if (to) {
-        newMessage.to = to;
-    }
     chat.push(newMessage);
 
     return JSON.stringify(newMessage);
 }
 
 function deleteHelper(id) {
-    let indexOfMessage = chat.indexOf(chat.find((message) => (message.id === id)));
+    const indexOfMessage = chat.indexOf(chat.find((message) => (message.id === id)));
     chat.splice(indexOfMessage, 1);
 
     return JSON.stringify({ 'status': 'ok' });
@@ -113,9 +109,13 @@ function patchHelper(id, text) {
 
 function checkValue(value, res) {
     if (!value) {
-        res.statusCode = 404;
-        res.end();
+        sendNotFound(res);
     }
+}
+
+function sendNotFound(res) {
+    res.statusCode = 404;
+    res.end('Not Found');
 }
 
 function checkPath(req, parsedUrl) {
